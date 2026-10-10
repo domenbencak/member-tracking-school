@@ -1,0 +1,215 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum MemberStatus {
+  DECEASED
+  RESIGNED
+  OTHER
+}
+
+enum DuplicateStrategy {
+  SKIP
+  UPDATE
+  CREATE_NEW
+}
+
+enum ImportDraftStatus {
+  UPLOADING
+  READY
+  COMMITTED
+  CANCELLED
+  EXPIRED
+}
+
+enum ImportRowStatus {
+  VALID
+  WARNING
+  INVALID
+  SKIPPED
+}
+
+enum ImportRowAction {
+  IMPORT
+  UPDATE
+  SKIP
+  INVALID
+}
+
+enum AuditAction {
+  MEMBER_CREATED
+  MEMBER_UPDATED
+  MEMBER_DELETED
+  MEMBER_RESTORED
+  MEMBER_EXPORTED
+  FULL_EXPORT
+  EXCEL_IMPORT
+  USER_CREATED
+  USER_ROLE_CHANGED
+  USER_DISABLED
+  USER_ENABLED
+  USER_DELETED
+  PASSWORD_RESET
+  PASSWORD_CHANGED
+}
+
+model User {
+  id                   String        @id @default(uuid()) @db.Uuid
+  email                String        @unique @db.VarChar(254)
+  passwordHash         String
+  role                 Role          @default(USER)
+  isActive             Boolean       @default(true)
+  mustChangePassword   Boolean       @default(false)
+  sessionVersion       Int           @default(1)
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+  importBatches        ImportBatch[] @relation("ImportAdministrator")
+  importDrafts         ImportDraft[] @relation("ImportDraftCreator")
+  auditLogs            AuditLog[]    @relation("AuditActor")
+  deletedMembers       Member[]      @relation("MemberDeletedBy")
+
+  @@index([role, isActive])
+}
+
+model Member {
+  id                       String    @id @default(uuid()) @db.Uuid
+  sequenceNumber           Int?
+  membershipCardNumber     String?   @db.VarChar(100)
+  membershipCardNormalized String?   @db.VarChar(100)
+  surname                  String    @db.VarChar(100)
+  firstName                String    @db.VarChar(100)
+  dateOfBirth              DateTime? @db.Date
+  street                   String?   @db.VarChar(200)
+  settlement               String?   @db.VarChar(120)
+  postalCode               String?   @db.VarChar(20)
+  postOffice               String?   @db.VarChar(120)
+  warVeteranStatus         Boolean?
+  email                    String?   @db.VarChar(254)
+  emailNormalized          String?   @db.VarChar(254)
+  municipality             String?   @db.VarChar(120)
+  subcommittee             String?   @db.VarChar(120)
+  membershipFeePaid        Boolean?
+  vpo                      String?   @db.VarChar(100)
+  memberStatus             MemberStatus @default(OTHER)
+  statusChangedAt          DateTime? @db.Date
+  notes                    String?   @db.Text
+  identityFingerprint      String?   @db.VarChar(64)
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
+  deletedAt                DateTime?
+  deletedById              String?   @db.Uuid
+  deletedBy                User?     @relation("MemberDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull)
+
+  @@index([surname])
+  @@index([firstName])
+  @@index([membershipCardNumber])
+  @@index([membershipCardNormalized])
+  @@index([emailNormalized])
+  @@index([identityFingerprint])
+  @@index([postalCode])
+  @@index([postOffice])
+  @@index([municipality])
+  @@index([subcommittee])
+  @@index([membershipFeePaid])
+  @@index([warVeteranStatus])
+  @@index([memberStatus])
+  @@index([statusChangedAt])
+  @@index([deletedAt])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model ImportDraft {
+  id                    String            @id @default(uuid()) @db.Uuid
+  fileName              String            @db.VarChar(255)
+  sheetName             String            @db.VarChar(255)
+  columnMapping         Json
+  duplicateStrategy     DuplicateStrategy
+  preserveBlankValues   Boolean           @default(true)
+  approvePostalWarnings Boolean           @default(false)
+  status                ImportDraftStatus @default(UPLOADING)
+  totalRows             Int               @default(0)
+  createdAt             DateTime          @default(now())
+  expiresAt             DateTime
+  createdById           String            @db.Uuid
+  createdBy             User              @relation("ImportDraftCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  rows                  ImportDraftRow[]
+
+  @@index([createdById, status])
+  @@index([expiresAt])
+}
+
+model ImportDraftRow {
+  id                String          @id @default(uuid()) @db.Uuid
+  draftId           String          @db.Uuid
+  draft             ImportDraft     @relation(fields: [draftId], references: [id], onDelete: Cascade)
+  sourceRowNumber   Int
+  data              Json
+  nonEmptyFields    Json
+  diagnostics       Json
+  status            ImportRowStatus
+  action            ImportRowAction
+  duplicateMemberId String?         @db.Uuid
+
+  @@unique([draftId, sourceRowNumber])
+  @@index([draftId, status])
+  @@index([draftId, action])
+}
+
+model ImportBatch {
+  id                         String            @id @default(uuid()) @db.Uuid
+  fileName                   String            @db.VarChar(255)
+  sheetName                  String            @db.VarChar(255)
+  importedAt                 DateTime          @default(now())
+  administratorId            String?           @db.Uuid
+  administrator              User?             @relation("ImportAdministrator", fields: [administratorId], references: [id], onDelete: SetNull)
+  administratorEmailSnapshot String            @db.VarChar(254)
+  totalRows                  Int
+  importedRows               Int
+  updatedRows                Int
+  skippedRows                Int
+  invalidRows                Int
+  duplicateStrategy          DuplicateStrategy
+  preserveBlankValues        Boolean
+  errorSummary               Json
+
+  @@index([importedAt])
+  @@index([administratorId])
+}
+
+model AuditLog {
+  id                 String      @id @default(uuid()) @db.Uuid
+  actorId            String?     @db.Uuid
+  actor               User?      @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+  actorEmailSnapshot String      @db.VarChar(254)
+  action              AuditAction
+  entityType          String      @db.VarChar(80)
+  entityId            String?     @db.VarChar(80)
+  changedFields       Json
+  createdAt           DateTime    @default(now())
+
+  @@index([createdAt])
+  @@index([action])
+  @@index([entityType])
+  @@index([actorId])
+}
+
+model LoginAttempt {
+  key          String   @id @db.VarChar(64)
+  failureCount Int      @default(0)
+  windowStart  DateTime @default(now())
+  blockedUntil DateTime?
+  updatedAt    DateTime @updatedAt
+
+  @@index([updatedAt])
+}

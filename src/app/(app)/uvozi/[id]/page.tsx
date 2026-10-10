@@ -1,0 +1,7 @@
+import { notFound } from "next/navigation";
+import { Card } from "@/components/ui/card";
+import { requireAdmin } from "@/lib/auth/authorization";
+import { db } from "@/lib/db";
+import { formatDateTime } from "@/lib/utils";
+
+export default async function ImportReportPage({ params }: { params: Promise<{ id: string }> }) { await requireAdmin(); const { id } = await params; const batch = await db.importBatch.findUnique({ where: { id } }); if (!batch) notFound(); const stats = [["Skupaj vrstic", batch.totalRows], ["Uvoženo", batch.importedRows], ["Posodobljeno", batch.updatedRows], ["Preskočeno", batch.skippedRows], ["Neveljavno", batch.invalidRows]]; return <><div className="page-header"><div><h1 className="page-title">Poročilo uvoza</h1><p className="page-description">{batch.fileName} · {formatDateTime(batch.importedAt)}</p></div></div><div className="stats-grid">{stats.map(([label, value]) => <Card key={label}><span className="text-sm text-[var(--text-muted)]">{label}</span><strong className="block text-3xl tabular-nums text-[var(--navy)]">{value}</strong></Card>)}</div><Card className="mt-4"><dl className="detail-list"><dt>Delovni list</dt><dd>{batch.sheetName}</dd><dt>Administrator</dt><dd>{batch.administratorEmailSnapshot}</dd><dt>Podvojeni</dt><dd>{batch.duplicateStrategy}</dd><dt>Prazne vrednosti</dt><dd>Ohranijo obstoječe podatke</dd></dl>{Array.isArray(batch.errorSummary) && batch.errorSummary.length > 0 && <pre className="mt-4 overflow-auto rounded bg-[#f3f6f8] p-3 text-xs">{JSON.stringify(batch.errorSummary, null, 2)}</pre>}</Card></>; }

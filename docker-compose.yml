@@ -1,0 +1,23 @@
+name: member-tracking-school
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: member_tracking_school
+      POSTGRES_USER: member_tracking_school
+      POSTGRES_PASSWORD: ${SCHOOL_DB_PASSWORD:?Run npm run school:env first}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - school_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U member_tracking_school -d member_tracking_school"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  school_postgres:

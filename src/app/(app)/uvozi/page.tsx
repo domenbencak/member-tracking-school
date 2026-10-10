@@ -1,0 +1,6 @@
+import Link from "next/link";
+import { requireAdmin } from "@/lib/auth/authorization";
+import { db } from "@/lib/db";
+import { formatDateTime } from "@/lib/utils";
+
+export default async function ImportsPage() { await requireAdmin(); const batches = await db.importBatch.findMany({ orderBy: { importedAt: "desc" }, take: 100 }); return <><div className="page-header"><div><h1 className="page-title">Zgodovina uvozov</h1><p className="page-description">Poročila zaključenih Excelovih uvozov</p></div></div><div className="table-wrap"><table className="data-table"><thead><tr><th>Datum</th><th>Datoteka</th><th>Administrator</th><th>Uvoženo</th><th>Posodobljeno</th><th>Preskočeno</th><th>Neveljavno</th></tr></thead><tbody>{batches.map((batch) => <tr key={batch.id}><td><Link className="text-[var(--police-blue)] underline" href={`/uvozi/${batch.id}`}>{formatDateTime(batch.importedAt)}</Link></td><td>{batch.fileName}<span className="block text-xs text-[var(--text-muted)]">{batch.sheetName}</span></td><td>{batch.administratorEmailSnapshot}</td><td>{batch.importedRows}</td><td>{batch.updatedRows}</td><td>{batch.skippedRows}</td><td>{batch.invalidRows}</td></tr>)}</tbody></table>{batches.length === 0 && <p className="p-6 text-center text-[var(--text-muted)]">Uvozov še ni bilo.</p>}</div></>; }
