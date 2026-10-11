@@ -1,0 +1,22 @@
+flowchart LR
+  accTitle: Vloge in funkcije aplikacije
+  accDescr: Navadni uporabnik dostopa do pregledovanja, filtrov, nalepk in lastnega gesla. Administrator ima dodatno upravljanje članov, uvoz, izvoz, revizijo in upravljanje računov.
+  USER["Uporabnik · USER"]
+  ADMIN["Administrator · ADMIN"]
+  subgraph SKUPNO["Funkcije obeh vlog"]
+    READ["Prijava in pregled<br/>nadzorne plošče"]
+    SEARCH["Seznam in podrobnosti članov<br/>Iskanje, filtri in razvrščanje"]
+    PRINT["Tisk posamezne nalepke<br/>in nalepk na A4"]
+    PASSWORD["Sprememba lastnega gesla<br/>in odjava"]
+  end
+  subgraph UPRAVLJANJE["Dodatne funkcije administratorja"]
+    MEMBERS["Dodajanje in urejanje članov"]
+    ARCHIVE["Arhiviranje in obnovitev članov"]
+    IMPORT["Uvoz Excel in poročila uvozov"]
+    EXPORT["Izvoz CSV in posameznega člana"]
+    ACCOUNTS["Upravljanje uporabnikov"]
+    AUDIT["Pregled revizijske sledi"]
+  end
+  USER --> SKUPNO
+  ADMIN --> SKUPNO
+  ADMIN --> UPRAVLJANJE

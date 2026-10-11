@@ -1,0 +1,20 @@
+flowchart TB
+  accTitle: Arhitektura šolske aplikacije Evidenca članov
+  accDescr: Brskalnik uporablja lokalni strežnik Next.js, ki prek preverjanja pravic in Prisma dostopa do ločene šolske baze PostgreSQL. Excel se razčleni v brskalniku.
+  subgraph ODJEMALEC["Brskalnik"]
+    UI["React 19 + Tailwind CSS 4<br/>Obrazci, seznam, filtri, nalepke"]
+    WORKER["Web Worker + SheetJS<br/>Lokalno branje Excelove datoteke"]
+    UI --> WORKER
+  end
+  subgraph STREZNIK["Next.js 16 · localhost:3001"]
+    HTTP["Strani, Server Actions<br/>in API Route Handlers"]
+    AUTH["NextAuth Credentials<br/>Preverjanje seje in pravic"]
+    LOGIKA["Poslovna logika<br/>Zod, člani, uvoz, revizijska sled"]
+    ORM["Prisma 7 + pg adapter"]
+    GUARD["Preverjanje šolske<br/>povezave do baze"]
+    HTTP --> AUTH --> LOGIKA --> ORM --> GUARD
+  end
+  DB[("PostgreSQL 18 v Dockerju<br/>member_tracking_school<br/>127.0.0.1:5433")]
+  UI <-->|"HTTP in piškotek seje"| HTTP
+  WORKER -->|"Preslikane vrstice JSON"| HTTP
+  GUARD --> DB

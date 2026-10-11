@@ -1,0 +1,31 @@
+sequenceDiagram
+  accTitle: Zaporedje prijave in dostopa do zaščitene strani
+  accDescr: NextAuth preveri omejitev poskusov, aktivnost računa in zgoščeno geslo. Uspešna prijava ustvari sejo; zaščitena stran ponovno preveri uporabnika in različico seje.
+  actor O as Oseba
+  participant UI as Obrazec v brskalniku
+  participant AUTH as NextAuth
+  participant DB as PostgreSQL
+  participant PAGE as Zaščitena stran
+  O->>UI: Vnese e-pošto in geslo
+  UI->>AUTH: Zahteva CSRF žeton in pošlje prijavo
+  AUTH->>AUTH: Validacija vnosa in HMAC identifikator
+  AUTH->>DB: Preveri LoginAttempt
+  DB-->>AUTH: Število poskusov in čas blokade
+  alt Prijava je začasno blokirana
+    AUTH-->>UI: Splošno sporočilo o neuspešni prijavi
+  else Prijava je dovoljena
+    AUTH->>DB: Prebere User po e-pošti
+    DB-->>AUTH: Račun in passwordHash
+    AUTH->>AUTH: bcrypt.compare in preverjanje isActive
+    alt Neveljavno geslo ali neaktiven račun
+      AUTH->>DB: Zabeleži neuspešen poskus
+      AUTH-->>UI: Splošno sporočilo o neuspešni prijavi
+    else Pravilni podatki
+      AUTH->>DB: Počisti neuspešne poskuse
+      AUTH-->>UI: Piškotek seje JWT, največ 8 ur
+      UI->>PAGE: Zahteva nadzorno ploščo
+      PAGE->>DB: Preveri isActive, vlogo in sessionVersion
+      DB-->>PAGE: Trenutno stanje računa
+      PAGE-->>UI: Dovoljena vsebina
+    end
+  end

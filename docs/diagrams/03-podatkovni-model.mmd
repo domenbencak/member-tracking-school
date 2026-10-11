@@ -1,0 +1,73 @@
+erDiagram
+  accTitle: Podatkovni model šolske aplikacije
+  accDescr: Sedem tabel iz sheme Prisma z izbranimi atributi. User je povezan z osnutki uvoza, poročili, revizijo in arhiviranimi člani. Referenca duplicateMemberId nima omejitve tujega ključa.
+  direction TB
+  User |o..o{ Member : "arhivira (FK)"
+  User ||..o{ ImportDraft : "ustvari (FK)"
+  User |o..o{ ImportBatch : "izvede (FK)"
+  User |o..o{ AuditLog : "sproži (FK)"
+  ImportDraft ||..o{ ImportDraftRow : "vsebuje (FK)"
+  Member |o..o{ ImportDraftRow : "duplicateMemberId: brez FK"
+  User {
+    uuid id PK
+    string email UK
+    string passwordHash
+    Role role
+    boolean isActive
+    int sessionVersion
+  }
+  Member {
+    uuid id PK
+    string firstName
+    string surname
+    string? membershipCardNumber
+    date? dateOfBirth
+    MemberStatus memberStatus
+    date? statusChangedAt
+    string? notes
+    datetime? deletedAt
+    uuid? deletedById FK
+  }
+  ImportDraft {
+    uuid id PK
+    uuid createdById FK
+    string fileName
+    json columnMapping
+    DuplicateStrategy duplicateStrategy
+    ImportDraftStatus status
+    datetime expiresAt
+  }
+  ImportDraftRow {
+    uuid id PK
+    uuid draftId FK
+    int sourceRowNumber
+    json data
+    json diagnostics
+    ImportRowAction action
+    uuid? duplicateMemberId "logična referenca"
+  }
+  ImportBatch {
+    uuid id PK
+    uuid? administratorId FK
+    string administratorEmailSnapshot
+    int totalRows
+    int importedRows
+    int updatedRows
+    int skippedRows
+    int invalidRows
+  }
+  AuditLog {
+    uuid id PK
+    uuid? actorId FK
+    string actorEmailSnapshot
+    AuditAction action
+    string entityType
+    string? entityId "brez FK"
+    json changedFields
+  }
+  LoginAttempt {
+    string key PK "HMAC identifikator"
+    int failureCount
+    datetime windowStart
+    datetime? blockedUntil
+  }
