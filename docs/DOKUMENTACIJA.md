@@ -6,6 +6,10 @@
 
 **Osnova opisa:** dejanska koda aplikacije, shema Prisma in preverjanje ob pripravi šolske kopije.
 
+Dokumenti za oddajo naloge: [vzpostavitev](VZPOSTAVITEV.md),
+[ključne funkcionalnosti](FUNKCIONALNOSTI.md) in
+[stanje testiranja in zagotavljanja kakovosti](STANJE_TESTIRANJA_IN_ZAGOTAVLJANJA_KAKOVOSTI.md).
+
 ## Kazalo
 
 1. [Namen in obseg](#1-namen-in-obseg)
@@ -20,6 +24,7 @@
 10. [Testiranje in predstavitev](#10-testiranje-in-predstavitev)
 11. [Omejitve in nadaljnji razvoj](#11-omejitve-in-nadaljnji-razvoj)
 12. [Povezava dokumentacije z izvorno kodo](#12-povezava-dokumentacije-z-izvorno-kodo)
+13. [Uporaba generativne UI](#13-uporaba-generativne-ui)
 
 ## 1. Namen in obseg
 
@@ -51,7 +56,7 @@ računov ni omogočeno; nov račun ustvari administrator.
 | Dodajanje in urejanje članov | Ne | Da |
 | Arhiviranje, pregled arhiva in obnovitev | Ne | Da |
 | Uvoz Excel in pregled poročil uvoza | Ne | Da |
-| Izvoz posameznega člana in skupinski CSV | Ne | Da |
+| Izvoz posameznega člana kot JSON ali CSV | Ne | Da |
 | Pregled revizijske sledi | Ne | Da |
 | Ustvarjanje in upravljanje uporabniških računov | Ne | Da |
 
@@ -291,9 +296,13 @@ začetni položaj 1–14 in do 140 članov. Pri tisku morajo biti merilo 100 %, 
 izklopljeni ter glave in noge izklopljene. Dejanski tisk je odvisen tudi od
 nastavitev in fizičnih omejitev tiskalnika.
 
-Administrator lahko izvozi člana kot JSON ali CSV in ne-arhivirane člane kot CSV.
-Skupinski API z `includeArchived=true` vključi tudi arhivirane zapise. CSV
-nevtralizira vrednosti, ki bi jih preglednica lahko obravnavala kot formule.
+Administrator lahko izvozi posameznega člana kot JSON ali CSV. CSV nevtralizira
+vrednosti, ki bi jih preglednica lahko obravnavala kot formule.
+
+Na seznamu je prikazan tudi gumb »Izvozi CSV«, vendar šolski repozitorij nima
+implementacije poti `/api/exports/members.csv`. Skupinski izvoz je zato znana
+napaka te kopije in ne šteje med delujoče funkcionalnosti. Podrobnosti so v
+[dokumentu o kakovosti](STANJE_TESTIRANJA_IN_ZAGOTAVLJANJA_KAKOVOSTI.md#4-odkrite-težave-in-razhajanja).
 
 ## 9. Namestitev in sodelovanje
 
@@ -317,6 +326,10 @@ npm run dev
 Aplikacija je na **http://localhost:3001**. Baza je v Docker projektu
 `member-tracking-school` in volumnu `member-tracking-school_school_postgres`,
 dostopnem na `127.0.0.1:5433`.
+
+To sta privzeti imeni. Če obstoječi volumen uporablja drugačno geslo, lahko
+ločeno okolje izberemo z `COMPOSE_PROJECT_NAME` v zasebni `.env`. Postopek in
+preverjena postavitev sta opisana v [navodilih za vzpostavitev](VZPOSTAVITEV.md).
 
 `school:env` ustvari naključna gesla in novo avtentikacijsko skrivnost.
 `school:setup` zažene bazo, uporabi obstoječe migracije ter ustvari dva začetna
@@ -359,10 +372,13 @@ ustvari z `npm run db:migrate`, obstoječe migracije pa se uporabijo z
 
 ## 10. Testiranje in predstavitev
 
-Ob pripravi šolske kopije 10. 10. 2026 so uspešno zaključili preverjanje kode,
+Pri preverjanju 11. 10. 2026 so uspešno zaključili preverjanje kode,
 preverjanje tipov, **63 testov enot v osmih datotekah**, **trije testi skozi
-brskalnik** in produkcijska gradnja. To je rezultat konkretnega preverjanja,
-ne zagotovilo, da bo vsaka prihodnja sprememba brez napak.
+brskalnik** in produkcijska gradnja. Preverjeni so bili tudi namestitev
+odvisnosti, shema Prisma, obe migraciji in začetni podatki v ločenem lokalnem
+okolju. Rezultati, opozorila, pokriti deli in uporaba UI so navedeni v
+[Stanju testiranja in zagotavljanja kakovosti](STANJE_TESTIRANJA_IN_ZAGOTAVLJANJA_KAKOVOSTI.md).
+Uspešen testni nabor ne pomeni, da so preverjene vse funkcionalnosti.
 
 ```bash
 npm run lint
@@ -430,10 +446,19 @@ periodično čiščenje začasnih podatkov. Gre za predloge, ne za že izvedene 
 | Uvoz in transakcija | [import/service.ts](../src/lib/import/service.ts) |
 | Pravila podvojitev | [import/duplicates.ts](../src/lib/import/duplicates.ts) |
 | Branje Excela | [xlsx.worker.ts](../src/workers/xlsx.worker.ts) |
-| Izvozi | [API exports](../src/app/api/exports/members.csv/route.ts) |
+| Izvoz posameznega člana | [API za izvoz](../src/app/api/members/[id]/export/route.ts) |
 | Mere nalepk | [printing.ts](../src/lib/printing.ts) |
 | Preverjanje šolske baze | [school-database.test.ts](../src/lib/school-database.test.ts) |
 | Testi uporabniških poti | [e2e/](../e2e/) |
 
 Izvorne definicije vseh šestih diagramov so v [docs/diagrams/](diagrams/).
 Pregled in navodila za ponovno generiranje so v [DIAGRAMI.md](DIAGRAMI.md).
+
+## 13. Uporaba generativne UI
+
+Pri pregledu in dopolnitvi dokumentacije ter izvedbi preverjanj za to nalogo je
+bil uporabljen **OpenAI Codex**, generativni agent. Njegovi opisi so bili
+primerjani z dejansko kodo, konfiguracijo in rezultati izvedenih ukazov.
+Uporaba UI pri posameznih aktivnostih in omejitve podatkov o prvotni izdelavi
+kode ter testov so opisane v
+[dokumentu o kakovosti](STANJE_TESTIRANJA_IN_ZAGOTAVLJANJA_KAKOVOSTI.md#6-uporaba-generativne-umetne-inteligence).

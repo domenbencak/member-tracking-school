@@ -6,6 +6,9 @@ setup creates its own administrator, normal user, and database.
 
 ## Šolska dokumentacija
 
+- [Vzpostavitev projekta](docs/VZPOSTAVITEV.md)
+- [Ključne funkcionalnosti in izbira projekta](docs/FUNKCIONALNOSTI.md)
+- [Stanje testiranja in zagotavljanja kakovosti](docs/STANJE_TESTIRANJA_IN_ZAGOTAVLJANJA_KAKOVOSTI.md)
 - [Dokumentacija v slovenščini](docs/DOKUMENTACIJA.md)
 - [Šest diagramov: arhitektura, vloge, ER, prijava, uvoz in lokalno sodelovanje](docs/DIAGRAMI.md)
 - Diagrami so na voljo kot SVG, PNG in urejljive definicije Mermaid.
@@ -53,6 +56,10 @@ Docker Compose uses project `member-tracking-school` and volume
 `member-tracking-school_school_postgres`. PostgreSQL binds only to `127.0.0.1`.
 The app uses port **3001**.
 
+An optional `COMPOSE_PROJECT_NAME` in your private `.env` selects a separate
+Compose project and volume. See the [setup troubleshooting guide](docs/VZPOSTAVITEV.md#5-težave-pri-vzpostavitvi)
+if an existing volume uses credentials from a different setup.
+
 Runtime queries, seed commands, and Prisma migrations validate the database URL.
 They reject remote hosts, other database/user names, other ports, and connection
 query parameters. An inherited production URL therefore fails before connecting.
@@ -94,7 +101,16 @@ Next.js, React, TypeScript, PostgreSQL, Prisma, NextAuth Credentials, Tailwind,
 Vitest, and Playwright. UI text is Slovenian. Administrators can manage members
 and users, import Excel, view audit history, and export data. Normal users can
 browse members and print labels. See [original app documentation](docs/UPSTREAM.md)
-for feature details; use this README for school setup.
+for upstream context and [current school functionality](docs/FUNKCIONALNOSTI.md)
+for the implemented features and known limitations of this copy.
+
+## Uporaba generativne UI
+
+Pri pregledu projekta, preverjanju vzpostavitve in pripravi dokumentov za to
+nalogo je bil uporabljen agent **OpenAI Codex**. Rezultati so bili preverjeni z
+izvorno kodo, zagonom obstoječih preverjanj in pregledom njihovih izhodov.
+Podrobnosti ter omejitve podatkov o pretekli uporabi UI so navedene v
+[dokumentu o kakovosti](docs/STANJE_TESTIRANJA_IN_ZAGOTAVLJANJA_KAKOVOSTI.md#6-uporaba-generativne-umetne-inteligence).
 
 Based on the original `member-tracking` project. This is a school demonstration
 using fictional data, not an official association or Slovenian Police product.

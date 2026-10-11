@@ -19,7 +19,7 @@ graphify-out/
 .agents/
 .aws/
 backups/
-exports/
+/exports/
 *.dump
 *.sql.gz
 *.sqlite
