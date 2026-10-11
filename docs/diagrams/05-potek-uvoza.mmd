@@ -1,0 +1,35 @@
+flowchart LR
+  accTitle: Potek uvoza članov iz Excelove datoteke
+  accDescr: Datoteka se razčleni lokalno. Administrator določi preslikavo in pravila, strežnik preveri pakete vrstic, zazna podvojitve ter po potrditvi v transakciji zapiše člane in poročilo.
+  subgraph PREP["1 · Priprava v brskalniku"]
+    direction TB
+    START(["Izbira .xlsx ali .xls"])
+    FILE["Preverjanje datoteke<br/>Web Worker razčleni delovni zvezek"]
+    MAP["Izbira lista in preslikava stolpcev<br/>Predogled prvih 10 vrstic"]
+    RULES["Izbira pravila podvojitev<br/>in dovoljenja za poštna opozorila"]
+    START --> FILE --> MAP --> RULES
+  end
+  subgraph CHECK["2 · Preverjanje na strežniku"]
+    direction TB
+    DRAFT["API preveri pravice in izvor<br/>Ustvari ImportDraft za 24 ur"]
+    ROWS["Paketi do 250 vrstic<br/>Validacija imen, datumov in e-pošte"]
+    VALID{"Vrstica primerna<br/>za obdelavo?"}
+    SKIP["Neveljavna ali prazna vrstica<br/>INVALID oziroma SKIP"]
+    DUP["Podvojitve: izkaznica → e-pošta → identiteta"]
+    STRATEGY["SKIP: preskoči<br/>UPDATE: dopolni obstoječega<br/>CREATE_NEW: ustvari nov zapis"]
+    REPORT["Poročilo: uvozi, posodobitve in napake"]
+    DRAFT --> ROWS --> VALID
+    VALID -->|"Ne"| SKIP --> REPORT
+    VALID -->|"Da"| DUP --> STRATEGY --> REPORT
+  end
+  subgraph COMMIT["3 · Potrditev in zapis"]
+    direction TB
+    CONFIRM{"Administrator potrdi<br/>in obstajajo spremembe?"}
+    WAIT["Brez zapisa članov<br/>Poročilo ostane na voljo"]
+    TX["Ponovno preverjanje in transakcija<br/>Člani + ImportBatch + AuditLog"]
+    CLEAN["Izbris osnutka in njegovih vrstic"]
+    END(["Prikaz končnega poročila"])
+    CONFIRM -->|"Ne"| WAIT
+    CONFIRM -->|"Da"| TX --> CLEAN --> END
+  end
+  PREP --> CHECK --> COMMIT

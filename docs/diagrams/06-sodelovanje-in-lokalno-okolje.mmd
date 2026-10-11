@@ -1,0 +1,20 @@
+flowchart TB
+  accTitle: Sodelovanje prek GitHuba z ločenima lokalnima bazama
+  accDescr: Dva študenta sodelujeta na istem zasebnem repozitoriju. Vsak ima lastno okoljsko datoteko, aplikacijo in Docker PostgreSQL. Podatkovne baze in gesla se ne delijo prek GitHuba.
+  REPO["Zasebni GitHub repozitorij<br/>member-tracking-school<br/>Koda, migracije, izmišljeni vzorci in dokumentacija"]
+  subgraph PRVI["Prvi študent"]
+    ENV1["Zasebna .env<br/>Lastna naključna gesla"]
+    APP1["Next.js · localhost:3001"]
+    CHECK1["Preverjanje lokalne šolske baze"]
+    DB1[("Docker PostgreSQL<br/>127.0.0.1:5433<br/>Lastni podatki")]
+    ENV1 --> APP1 --> CHECK1 --> DB1
+  end
+  subgraph DRUGI["Sošolec"]
+    ENV2["Zasebna .env<br/>Druga naključna gesla"]
+    APP2["Next.js · localhost:3001"]
+    CHECK2["Preverjanje lokalne šolske baze"]
+    DB2[("Docker PostgreSQL<br/>127.0.0.1:5433<br/>Lastni podatki")]
+    ENV2 --> APP2 --> CHECK2 --> DB2
+  end
+  REPO <-->|"git clone / pull / push"| APP1
+  REPO <-->|"git clone / pull / push"| APP2

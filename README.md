@@ -4,6 +4,12 @@ Independent school copy of the Slovenian member-management app. This repository
 contains source code, schema migrations, and fictional sample data. Every local
 setup creates its own administrator, normal user, and database.
 
+## Šolska dokumentacija
+
+- [Dokumentacija v slovenščini](docs/DOKUMENTACIJA.md)
+- [Šest diagramov: arhitektura, vloge, ER, prijava, uvoz in lokalno sodelovanje](docs/DIAGRAMI.md)
+- Diagrami so na voljo kot SVG, PNG in urejljive definicije Mermaid.
+
 ## Start locally
 
 Install Node.js 24 LTS (see `.nvmrc`) and start Docker Desktop or Docker Engine.
