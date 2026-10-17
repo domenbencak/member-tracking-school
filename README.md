@@ -9,6 +9,8 @@ setup creates its own administrator, normal user, and database.
 - [Vzpostavitev projekta](docs/VZPOSTAVITEV.md)
 - [Ključne funkcionalnosti in izbira projekta](docs/FUNKCIONALNOSTI.md)
 - [Stanje testiranja in zagotavljanja kakovosti](docs/STANJE_TESTIRANJA_IN_ZAGOTAVLJANJA_KAKOVOSTI.md)
+- [Pet funkcionalnih testnih primerov in končni ukaz agentu](docs/funkcionalno-testiranje/Testni_primeri_in_ukaz_agentu.docx)
+- [Matrika povezav funkcionalnosti s testnimi primeri](docs/funkcionalno-testiranje/Matrika_funkcionalnosti_in_testov.docx)
 - [Dokumentacija v slovenščini](docs/DOKUMENTACIJA.md)
 - [Šest diagramov: arhitektura, vloge, ER, prijava, uvoz in lokalno sodelovanje](docs/DIAGRAMI.md)
 - Diagrami so na voljo kot SVG, PNG in urejljive definicije Mermaid.

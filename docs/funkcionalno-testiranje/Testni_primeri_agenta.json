@@ -1,0 +1,372 @@
+{
+  "cases": [
+    {
+      "id": "TC-01",
+      "title": "Veljavna prijava uporabnika in odjava",
+      "objective": "Preveriti prijavo aktivnega uporabnika USER, dostop do zaščitene strani in izgubo dostopa po odjavi.",
+      "functionality_ids": [
+        "K-01"
+      ],
+      "role": "USER",
+      "type": "Pozitivni",
+      "priority": "Visoka P1",
+      "preconditions": [
+        "Aplikacija http://localhost:3001 deluje. Račun user@example.test je aktiven, ima vlogo USER in ne zahteva menjave gesla. Prijava za račun in IP ni blokirana.",
+        "Odprite novo zasebno okno brskalnika brez prijavljene seje. Veljavno lokalno geslo pozna izvajalec."
+      ],
+      "data": [
+        "E-pošta: user@example.test. Geslo: <VELJAVNO_GESLO_USER>, označba za veljavno lokalno geslo.",
+        "Prijava: /prijava. Zaščitena stran: /clani."
+      ],
+      "steps": [
+        {
+          "number": 1,
+          "action": "Odprite http://localhost:3001/prijava.",
+          "expected": "Prikazana so polji E-pošta in Geslo ter gumb Prijava."
+        },
+        {
+          "number": 2,
+          "action": "Vnesite navedeno e-pošto in veljavno lokalno geslo. Kliknite Prijava.",
+          "expected": "Odpre se Nadzorna plošča. V glavi je user@example.test in gumb Odjava."
+        },
+        {
+          "number": 3,
+          "action": "Kliknite Člani.",
+          "expected": "Odpre se /clani z naslovom Člani in seznamom. Ponovna prijava ni zahtevana."
+        },
+        {
+          "number": 4,
+          "action": "Kliknite Odjava in počakajte na preusmeritev.",
+          "expected": "Odpre se /prijava z obrazcem za prijavo."
+        },
+        {
+          "number": 5,
+          "action": "V naslovno vrstico znova vnesite http://localhost:3001/clani.",
+          "expected": "Odpre se prijava; seznam članov ni prikazan. URL lahko vsebuje callbackUrl."
+        }
+      ],
+      "final_expected": "Test je uspešen, če veljavna prijava omogoči dostop do /clani, odjava pa ta dostop prekine in so izpolnjeni vsi pričakovani rezultati korakov.",
+      "postconditions": "Uporabnik je odjavljen. Članski podatki in obstoječi račun ostanejo nespremenjeni.",
+      "cleanup": "Zaprite zasebno okno. Ob ponovitvi uporabite novo okno brez seje; obstoječega šolskega računa ne odstranjujte.",
+      "author": "OpenAI Codex – glavni agent",
+      "created_date": "12. 10. 2026",
+      "version": "1.1",
+      "actual_result": "Ni izvedeno",
+      "execution_status": "Ni izvedeno",
+      "executor": "Za vnos ob izvedbi",
+      "execution_date": "Za vnos ob izvedbi",
+      "environment": "Za vnos ob izvedbi",
+      "defect_link": "Za vnos ob izvedbi",
+      "evidence": [
+        "docs/FUNKCIONALNOSTI.md",
+        "src/components/login-form.tsx",
+        "src/components/sign-out-button.tsx",
+        "src/lib/auth/options.ts",
+        "src/lib/auth/authorization.ts",
+        "src/proxy.ts"
+      ]
+    },
+    {
+      "id": "TC-02",
+      "title": "Iskanje in kombinacija filtrov članov",
+      "objective": "Preveriti združevanje iskanja s filtriranjem po občini in plačilu članarine, prazen rezultat, osvežitev in čiščenje pogojev.",
+      "functionality_ids": [
+        "K-04"
+      ],
+      "role": "USER",
+      "type": "Pozitivni",
+      "priority": "Visoka P1",
+      "preconditions": [
+        "Aplikacija deluje. Neodvisno se prijavite kot aktiven USER user@example.test z <VELJAVNO_GESLO_USER>, brez zahteve po menjavi gesla.",
+        "Administrator pred izvedbo pripravi tri spodnje ne-arhivirane člane. V drugih iskanih poljih ne-arhiviranih članov ni niza TC02-. Podatki se med testom ne spreminjajo. Uporabite namizni prikaz."
+      ],
+      "data": [
+        "A: Nika Filtrnik; izkaznica TC02-A; občina Maribor; Plačilo članarine Da.",
+        "B: Maja Filtrnik; izkaznica TC02-B; občina Maribor; Plačilo članarine Ne.",
+        "C: Rok Filtrnik; izkaznica TC02-C; občina Ptuj; Plačilo članarine Da. Vsi imajo status Drugo; ostala neobvezna polja so prazna ali privzeta. Iskanje: TC02-."
+      ],
+      "steps": [
+        {
+          "number": 1,
+          "action": "Odprite /clani brez parametrov. V Iskanje članov vnesite TC02- in počakajte na posodobitev seznama.",
+          "expected": "Prikazane so natanko tri vrstice z izkaznicami TC02-A, TC02-B in TC02-C; števec je 3 rezultatov."
+        },
+        {
+          "number": 2,
+          "action": "Razprite Filtri. Izberite Občina Maribor in Plačilo članarine Da. Ostale filtre pustite privzete. Kliknite Uporabi filtre.",
+          "expected": "Prikazan je samo TC02-A; števec je 1 rezultatov. B izloči članarina, C občina."
+        },
+        {
+          "number": 3,
+          "action": "Osvežite stran.",
+          "expected": "Iskanje TC02-, oba filtra in en rezultat TC02-A ostanejo ohranjeni."
+        },
+        {
+          "number": 4,
+          "action": "Ohranite iskanje. Nastavite Občina Ptuj in Plačilo članarine Ne ter kliknite Uporabi filtre.",
+          "expected": "Števec je 0 rezultatov. Prikaže se Ni članov, ki bi ustrezali izbranim pogojem."
+        },
+        {
+          "number": 5,
+          "action": "Kliknite Počisti filtre.",
+          "expected": "Odpre se /clani brez pogojev. Iskanje je prazno, filtri privzeti; prikazan je nefiltriran nabor članov."
+        }
+      ],
+      "final_expected": "Test je uspešen, če iskanje vrne tri testne člane, kombinacija Maribor in Da samo A, Ptuj in Ne nobenega, osvežitev ohrani pogoje in čiščenje jih odstrani.",
+      "postconditions": "Iskanje in filtri so počiščeni; podatki testnih članov so nespremenjeni.",
+      "cleanup": "Odjavite se. Stalni testni nabor pustite pripravljen; začasne člane administrator arhivira. Pred ponovitvijo obnovite iste tri zapise ali pripravite nov enkraten nabor in uskladite označbe.",
+      "author": "OpenAI Codex – glavni agent",
+      "created_date": "12. 10. 2026",
+      "version": "1.1",
+      "actual_result": "Ni izvedeno",
+      "execution_status": "Ni izvedeno",
+      "executor": "Za vnos ob izvedbi",
+      "execution_date": "Za vnos ob izvedbi",
+      "environment": "Za vnos ob izvedbi",
+      "defect_link": "Za vnos ob izvedbi",
+      "evidence": [
+        "docs/FUNKCIONALNOSTI.md",
+        "src/components/member-filters.tsx",
+        "src/components/search-input.tsx",
+        "src/components/member-results.tsx",
+        "src/lib/members/queries.ts"
+      ]
+    },
+    {
+      "id": "TC-03",
+      "title": "Zavrnitev dodajanja člana z neveljavnim elektronskim naslovom",
+      "objective": "Preveriti, da neveljavna e-pošta povzroči jasno napako in prepreči shranjevanje novega člana.",
+      "functionality_ids": [
+        "K-06"
+      ],
+      "role": "ADMIN",
+      "type": "Negativni",
+      "priority": "Visoka P1",
+      "preconditions": [
+        "Aplikacija deluje. Neodvisno se prijavite kot aktiven ADMIN admin@example.test z <VELJAVNO_GESLO_ADMIN>, brez zahteve po menjavi gesla.",
+        "Član z izkaznico TC03-ERR-001 še ne obstaja. Drugih neveljavnih vrednosti ne vnašajte."
+      ],
+      "data": [
+        "Ime Klara; Priimek Preizkusnik; Št. izkaznice TC03-ERR-001; E-pošta klara.tc03.example.test, brez znaka @.",
+        "Status člana Drugo; članarina in veteranski status Ni podatka. Ostala neobvezna polja so prazna; datum statusa ostane privzet."
+      ],
+      "steps": [
+        {
+          "number": 1,
+          "action": "Odprite /clani brez parametrov. Poiščite TC03-ERR-001.",
+          "expected": "Prikazano je 0 rezultatov; testni član še ne obstaja."
+        },
+        {
+          "number": 2,
+          "action": "Kliknite Dodaj člana.",
+          "expected": "Odpre se /clani/nov z obrazcem Dodaj člana in gumbom Shrani."
+        },
+        {
+          "number": 3,
+          "action": "Vnesite navedene ime, priimek, izkaznico in neveljavno e-pošto. Ohranite druge navedene vrednosti. Kliknite Shrani.",
+          "expected": "Obrazec ostane odprt. Prikažeta se Preverite označena polja. in pri e-pošti Vnesite veljaven e-poštni naslov. Stran podrobnosti se ne odpre."
+        },
+        {
+          "number": 4,
+          "action": "Kliknite Prekliči. Na seznamu brez dodatnih filtrov znova poiščite TC03-ERR-001.",
+          "expected": "Prikazano je 0 rezultatov in Ni članov, ki bi ustrezali izbranim pogojem. Zapis ni bil shranjen."
+        }
+      ],
+      "final_expected": "Test je uspešen, če sistem zavrne neveljavno e-pošto z navedenima sporočiloma in ne ustvari testnega člana. Pričakovana zavrnitev pomeni pravilen rezultat testa.",
+      "postconditions": "Član TC03-ERR-001 ne obstaja. Administrator je na seznamu članov.",
+      "cleanup": "Počistite filtre in se odjavite. Podatkov za čiščenje ob pričakovanem rezultatu ni. Če zapis nepričakovano nastane, evidentirajte napako in ga arhivirajte s polnim imenom Klara Preizkusnik. Pred ponovitvijo zagotovite odsotnost označbe v ne-arhiviranem naboru.",
+      "author": "OpenAI Codex – glavni agent",
+      "created_date": "12. 10. 2026",
+      "version": "1.1",
+      "actual_result": "Ni izvedeno",
+      "execution_status": "Ni izvedeno",
+      "executor": "Za vnos ob izvedbi",
+      "execution_date": "Za vnos ob izvedbi",
+      "environment": "Za vnos ob izvedbi",
+      "defect_link": "Za vnos ob izvedbi",
+      "evidence": [
+        "docs/FUNKCIONALNOSTI.md",
+        "src/components/member-form.tsx",
+        "src/lib/members/validation.ts",
+        "src/lib/members/actions.ts",
+        "src/lib/action-state.ts"
+      ]
+    },
+    {
+      "id": "TC-04",
+      "title": "Arhiviranje in obnovitev istega člana",
+      "objective": "Preveriti, da arhiviranje onemogoči običajen dostop do člana, obnovitev pa vrne isti zapis z ohranjenimi podatki.",
+      "functionality_ids": [
+        "K-07",
+        "K-05"
+      ],
+      "role": "ADMIN",
+      "type": "Pozitivni",
+      "priority": "Visoka P1",
+      "preconditions": [
+        "Aplikacija deluje. Neodvisno se prijavite kot aktiven ADMIN admin@example.test z <VELJAVNO_GESLO_ADMIN>, brez zahteve po menjavi gesla.",
+        "Pripravljen je natanko en ne-arhiviran član s spodnjimi podatki; drugi testi ga ne spreminjajo."
+      ],
+      "data": [
+        "Vid Arhivnik; izkaznica TC04-ARH-001; e-pošta vid.tc04@example.test; ulica Testna ulica 14; poštna številka 2000; pošta Maribor; status Drugo; datum statusa 2026-10-01; članarina Da; veteran Ne; opomba Kontrolna opomba TC04.",
+        "Potrditveno polno ime: Vid Arhivnik."
+      ],
+      "steps": [
+        {
+          "number": 1,
+          "action": "Na /clani brez dodatnih filtrov poiščite TC04-ARH-001. Odprite člana, preverite podatke in zabeležite ID ter URL podrobnosti.",
+          "expected": "Najden je en Vid Arhivnik. Podrobnosti ustrezajo testnim podatkom."
+        },
+        {
+          "number": 2,
+          "action": "Kliknite Izbriši.",
+          "expected": "Odpre se Arhiviraj člana. Zahtevano je Polno ime; gumb Potrdi brisanje je brez vnosa onemogočen."
+        },
+        {
+          "number": 3,
+          "action": "Vnesite Vid Arhivnik in kliknite Potrdi brisanje.",
+          "expected": "Prikaže se Član je arhiviran. Odpre se /clani."
+        },
+        {
+          "number": 4,
+          "action": "Znova poiščite TC04-ARH-001.",
+          "expected": "Običajni seznam vrne 0 rezultatov."
+        },
+        {
+          "number": 5,
+          "action": "V naslovni vrstici odprite zabeleženi URL podrobnosti.",
+          "expected": "Stran sporoči, da zapis ni najden, oziroma prikaže 404. Podatki arhiviranega člana niso dostopni."
+        },
+        {
+          "number": 6,
+          "action": "Odprite /clani/arhiv in poiščite Vid Arhivnik, TC04-ARH-001.",
+          "expected": "Arhiv članov vsebuje zapis z izkaznico, časom arhiviranja in gumbom Obnovi."
+        },
+        {
+          "number": 7,
+          "action": "V tej vrstici kliknite Obnovi.",
+          "expected": "Prikaže se Član je obnovljen. Vrstica izgine iz arhiva."
+        },
+        {
+          "number": 8,
+          "action": "Na /clani znova poiščite TC04-ARH-001 in odprite podrobnosti.",
+          "expected": "Najden je en član. ID je prvotni; vsi navedeni podatki so ohranjeni, datum statusa je 1. 10. 2026."
+        }
+      ],
+      "final_expected": "Test je uspešen, če arhiviranega člana ni niti na običajnem seznamu niti v podrobnostih, obnovitev pa vrne isti ID in podatke. Vsi koraki ustrezajo pričakovanjem.",
+      "postconditions": "Član je obnovljen. Status članstva ostane Drugo; arhiviranje ga ne spremeni.",
+      "cleanup": "Odjavite se. Za ponovitev stalni nabor pustite obnovljen. Začasni zapis administrator ponovno arhivira s polnim imenom; pred ponovitvijo ga obnovi. Revizijski dogodki ostanejo.",
+      "author": "OpenAI Codex – glavni agent",
+      "created_date": "12. 10. 2026",
+      "version": "1.1",
+      "actual_result": "Ni izvedeno",
+      "execution_status": "Ni izvedeno",
+      "executor": "Za vnos ob izvedbi",
+      "execution_date": "Za vnos ob izvedbi",
+      "environment": "Za vnos ob izvedbi",
+      "defect_link": "Za vnos ob izvedbi",
+      "evidence": [
+        "docs/FUNKCIONALNOSTI.md",
+        "src/components/member-delete-button.tsx",
+        "src/components/restore-member-button.tsx",
+        "src/lib/members/actions.ts",
+        "src/app/(app)/clani/arhiv/page.tsx",
+        "src/app/(app)/clani/[id]/page.tsx"
+      ]
+    },
+    {
+      "id": "TC-05",
+      "title": "Uvoz novega podvojenega in neveljavnega zapisa",
+      "objective": "Preveriti uvoz enega novega člana, preskok podvojitve s pravilom SKIP, zavrnitev neveljavne vrstice in pravilnost poročila.",
+      "functionality_ids": [
+        "K-08",
+        "K-09",
+        "K-05"
+      ],
+      "role": "ADMIN",
+      "type": "Pozitivni z negativnim vhodom",
+      "priority": "Visoka P1",
+      "preconditions": [
+        "Aplikacija deluje. Neodvisno se prijavite kot aktiven ADMIN admin@example.test z <VELJAVNO_GESLO_ADMIN>, brez zahteve po menjavi gesla.",
+        "Pripravljen je en ne-arhiviran Borut Primer z izkaznico TC05-DUP-001, e-pošto borut.tc05@example.test in opombo Original TC05. Status je Drugo; druga neobvezna polja so prazna oziroma Ni podatka.",
+        "TC05-NOV-001 in TC05-ERR-001 ne obstajata niti v arhivu. E-pošta novega člana je enkratna. Ni sočasnih sprememb. Pripravite pravo datoteko .xlsx s spodnjo vsebino, brez praznih dodatnih vrstic, znotraj omejitve velikosti."
+      ],
+      "data": [
+        "Datoteka tc05-skip-v1.xlsx, en list Clani_TC05. Glave A:E v vrstici 1: Št. izkaznice | Priimek | Ime | E-pošta | Opombe. Celice so besedilne.",
+        "Vrstica 2: TC05-NOV-001 | Vzorčnik | Tjaša | tjasa.tc05@example.test | Nov zapis TC05.",
+        "Vrstica 3: [presledek]tc05-dup-001[presledek] | Primer | Borut | borut.sprememba.tc05@example.test | Tega ne shrani TC05. Oznaki [presledek] zamenjajte z dejanskima presledkoma.",
+        "Vrstica 4: TC05-ERR-001 | Neveljavnik | Petra | petra.tc05.example.test | Neveljavna vrstica TC05.",
+        "Pravilo: Preskoči podvojene (SKIP). Dovoli opozorila poštnih številk: nepotrjeno. Nenavedena polja: Ne uvozi."
+      ],
+      "steps": [
+        {
+          "number": 1,
+          "action": "Na /clani odprite Boruta po izkaznici TC05-DUP-001. Zabeležite ID, e-pošto in opombo. Nato odprite Uvoz podatkov.",
+          "expected": "Borut ustreza izhodiščnim podatkom. Odpre se /uvoz."
+        },
+        {
+          "number": 2,
+          "action": "Izberite tc05-skip-v1.xlsx. Preverite preslikavo petih glav na istoimenska polja in tri podatkovne vrstice v predogledu.",
+          "expected": "Datoteka se prebere. Vse preslikave in tri vrstice ustrezajo podatkom. Pri enem listu izbirnik lista ni prikazan."
+        },
+        {
+          "number": 3,
+          "action": "Izberite Preskoči podvojene, pustite poštna opozorila nepotrjena in kliknite Preveri vrstice.",
+          "expected": "Za uvoz 1, Za posodobitev 0, Preskočeno 1, Neveljavno 1. Vrstica 3 je SKIP; vrstica 4 INVALID z Vnesite veljaven e-poštni naslov. Potrdi in uvozi je omogočen."
+        },
+        {
+          "number": 4,
+          "action": "Pred potrditvijo v drugem zavihku iste seje na /clani brez dodatnih filtrov poiščite TC05-NOV-001. Vrnite se v čarovnik.",
+          "expected": "Iskanje vrne 0 rezultatov. Preverjanje vrstic še ni ustvarilo novega člana."
+        },
+        {
+          "number": 5,
+          "action": "Kliknite Potrdi in uvozi.",
+          "expected": "Odpre se Poročilo uvoza: Skupaj vrstic 3, Uvoženo 1, Posodobljeno 0, Preskočeno 1, Neveljavno 1; datoteka tc05-skip-v1.xlsx, list Clani_TC05, Podvojeni SKIP in prijavljeni administrator. Napaka e-pošte je povezana z vrstico 4."
+        },
+        {
+          "number": 6,
+          "action": "Na /clani brez dodatnih filtrov poiščite TC05-NOV-001 in odprite podrobnosti.",
+          "expected": "Najdena je samo Tjaša Vzorčnik z izkaznico, e-pošto in opombo iz vrstice 2; status je Drugo."
+        },
+        {
+          "number": 7,
+          "action": "Poiščite TC05-DUP-001 in odprite Borutove podrobnosti.",
+          "expected": "Najden je en prvotni Borut z istim ID, e-pošto borut.tc05@example.test in opombo Original TC05. Spremembe iz vrstice 3 niso shranjene."
+        },
+        {
+          "number": 8,
+          "action": "Poiščite TC05-ERR-001 brez dodatnih filtrov.",
+          "expected": "Prikazano je 0 rezultatov. Neveljaven zapis ni ustvarjen."
+        },
+        {
+          "number": 9,
+          "action": "Odprite Zgodovina uvozov. Pri najnovejšem uvozu te datoteke kliknite povezavo v stolpcu Datum.",
+          "expected": "Zgodovina kaže enake števce, datoteko in administratorja. Povezava znova odpre isto poročilo."
+        }
+      ],
+      "final_expected": "Test je uspešen, če je ustvarjena samo Tjaša, Borut ostane nespremenjen, Petra ne nastane in so števci ter vsi drugi pričakovani rezultati pravilni.",
+      "postconditions": "Ustvarjen je en nov član in poročilo uvoza; obstoječi član je nespremenjen. Neveljavna vrstica ni shranjena med člane.",
+      "cleanup": "Arhivirajte začasnega novega člana in po potrebi Boruta; odjavite se. Poročilo in revizijski zapis ostaneta. Za ponovitev obnovite Boruta ter v vseh podatkih in datoteki usklajeno uporabite nove enkratne izkaznice in e-pošte nove ter neveljavne vrstice. Arhiviranje novega člana ne odpravi njegove podvojitve.",
+      "author": "OpenAI Codex – glavni agent",
+      "created_date": "12. 10. 2026",
+      "version": "1.1",
+      "actual_result": "Ni izvedeno",
+      "execution_status": "Ni izvedeno",
+      "executor": "Za vnos ob izvedbi",
+      "execution_date": "Za vnos ob izvedbi",
+      "environment": "Za vnos ob izvedbi",
+      "defect_link": "Za vnos ob izvedbi",
+      "evidence": [
+        "docs/FUNKCIONALNOSTI.md",
+        "src/components/import-wizard.tsx",
+        "src/lib/import/service.ts",
+        "src/lib/import/duplicates.ts",
+        "src/lib/members/validation.ts",
+        "src/app/(app)/uvozi/page.tsx",
+        "src/app/(app)/uvozi/[id]/page.tsx",
+        "src/app/(app)/clani/[id]/page.tsx"
+      ]
+    }
+  ]
+}
