@@ -1,0 +1,522 @@
+{
+  "cases": [
+    {
+      "id": "TC-01",
+      "title": "Veljavna prijava uporabnika USER, dostop do zaščitene strani in odjava",
+      "objective": "Preveriti, da aktiven račun USER z veljavnim geslom dostopa do zaščitene vsebine in da po odjavi zaščitena stran ni več dostopna.",
+      "functionality_ids": [
+        "K-01",
+        "F-01"
+      ],
+      "role": "USER",
+      "type": "pozitivni",
+      "priority": "Visoka",
+      "preconditions": [
+        "Aplikacija teče na http://localhost:3001.",
+        "Račun user@example.test obstaja, je aktiven, ni blokiran zaradi neuspelih prijav in ne zahteva spremembe gesla.",
+        "Brskalnik nima aktivne seje aplikacije (zasebno okno)."
+      ],
+      "data": {
+        "e_posta": "user@example.test",
+        "geslo": "<VELJAVNO_GESLO_USER>"
+      },
+      "steps": [
+        {
+          "number": 1,
+          "action": "Odpri http://localhost:3001/prijava.",
+          "expected": "Prikaže se prijavni obrazec s poljema za e-pošto in geslo.",
+          "source": "K-01; F-01; UPSTREAM.md, Authentication and authorization"
+        },
+        {
+          "number": 2,
+          "action": "Vnesi testne podatke in potrdi prijavo.",
+          "expected": "Prijava uspe; prikaže se zaščitena vsebina aplikacije (npr. nadzorna plošča).",
+          "source": "K-01; F-01"
+        },
+        {
+          "number": 3,
+          "action": "Zabeleži naslov URL prikazane zaščitene strani.",
+          "expected": "Naslov ni /prijava; vsebina je prikazana brez ponovne prijave.",
+          "source": "F-01; UPSTREAM.md, Authentication and authorization"
+        },
+        {
+          "number": 4,
+          "action": "Izvedi odjavo.",
+          "expected": "Seja se zaključi; zaščitena vsebina ni več prikazana.",
+          "source": "K-01"
+        },
+        {
+          "number": 5,
+          "action": "V isti zavihek vnesi zabeleženi URL iz koraka 3.",
+          "expected": "Zaščitena vsebina se ne prikaže; uporabnik je napoten na prijavo.",
+          "source": "K-01; UPSTREAM.md, Authentication and authorization (vse strani razen /prijava zahtevajo prijavo)"
+        }
+      ],
+      "final_expected": "USER se uspešno prijavi in vidi zaščiteno stran; po odjavi ta stran brez nove prijave ni dostopna. Uspeh: ujemajo se vsi pričakovani rezultati. Neizpolnjen predpogoj: »Blokirano«; razhajanje: »Neuspešno«.",
+      "assumptions": [
+        "Korak 2: da je po prijavi prikazana nadzorna plošča oziroma druga začetna zaščitena stran, dokumentacija ne določa natančno.",
+        "Korak 4: napis in mesto gumba za odjavo ter stran, prikazana po odjavi, niso določeni.",
+        "Korak 5: da se uporabnik preusmeri ravno na /prijava (in ne npr. prejme sporočilo o napaki), je predpostavka; zahteva je le, da vsebina ni dostopna."
+      ],
+      "postconditions": "Uporabnik je odjavljen; podatki v aplikaciji niso spremenjeni.",
+      "cleanup": "Ni potrebno; zapri zasebno okno. Ponovitev: test je ponovljiv brez priprave; po petih napačnih poskusih v 15 minutah počakaj 15 minut (DOKUMENTACIJA.md, razdelek 6).",
+      "sources": [
+        "FUNKCIONALNOSTI.md, razdelek 2 (K-01)",
+        "DOKUMENTACIJA.md, razdelek 3 (F-01), razdelek 6",
+        "UPSTREAM.md, Authentication and authorization",
+        "VZPOSTAVITEV.md, razdelek 2"
+      ],
+      "author": "agent UI",
+      "created_date": "19. 10. 2026",
+      "version": "2.0",
+      "actual_result": "Ni izvedeno",
+      "execution_status": "Ni izvedeno",
+      "executor": "Za vnos ob izvedbi",
+      "execution_date": "Za vnos ob izvedbi",
+      "environment": "Lokalna aplikacija http://localhost:3001 (VZPOSTAVITEV.md, razdelek 2); brskalnik in različica aplikacije: Za vnos ob izvedbi",
+      "defect_link": "Za vnos ob izvedbi"
+    },
+    {
+      "id": "TC-02",
+      "title": "Združevanje iskanja ter filtrov Občina in Plačilo članarine",
+      "objective": "Preveriti, da seznam članov hkrati upošteva iskanje in filtra, da se pogoji ohranijo po osvežitvi in da jih je mogoče počistiti.",
+      "functionality_ids": [
+        "K-01",
+        "K-04",
+        "F-04"
+      ],
+      "role": "USER",
+      "type": "pozitivni",
+      "priority": "Srednja",
+      "preconditions": [
+        "Aplikacija teče na http://localhost:3001; račun user@example.test je aktiven.",
+        "Administrator je pred testom pripravil tri ne-arhivirane člane iz testnih podatkov (K-06).",
+        "Noben drug ne-arhiviran član nima v iskanih poljih niza »TC02-«."
+      ],
+      "data": {
+        "geslo": "<VELJAVNO_GESLO_USER>",
+        "clani": [
+          {
+            "izkaznica": "TC02-A",
+            "ime": "Ana",
+            "priimek": "Testna",
+            "obcina": "Maribor",
+            "clanarina": "plačano"
+          },
+          {
+            "izkaznica": "TC02-B",
+            "ime": "Bojan",
+            "priimek": "Testni",
+            "obcina": "Maribor",
+            "clanarina": "neplačano"
+          },
+          {
+            "izkaznica": "TC02-C",
+            "ime": "Cvetka",
+            "priimek": "Testna",
+            "obcina": "Ptuj",
+            "clanarina": "plačano"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "number": 1,
+          "action": "Prijavi se z user@example.test in geslom ter odpri seznam članov.",
+          "expected": "Prikaže se seznam ne-arhiviranih članov.",
+          "source": "K-01; K-04; DOKUMENTACIJA.md, razdelek 2"
+        },
+        {
+          "number": 2,
+          "action": "V iskanje vnesi »TC02-«.",
+          "expected": "Prikazani so natanko trije zapisi: TC02-A, TC02-B, TC02-C.",
+          "source": "K-04; F-04"
+        },
+        {
+          "number": 3,
+          "action": "Ohrani iskanje ter nastavi Občina = Maribor in Plačilo članarine = plačano.",
+          "expected": "Prikazan je samo TC02-A.",
+          "source": "K-04; F-04"
+        },
+        {
+          "number": 4,
+          "action": "Osveži stran (F5).",
+          "expected": "Iskalni niz in oba filtra ostanejo nastavljeni; prikazan je samo TC02-A; URL vsebuje parametre pogojev.",
+          "source": "DOKUMENTACIJA.md, razdelek 8; UPSTREAM.md, Member browsing and exports"
+        },
+        {
+          "number": 5,
+          "action": "Spremeni Občina = Ptuj in Plačilo članarine = neplačano.",
+          "expected": "Ni prikazanega nobenega zapisa; seznam je prazen.",
+          "source": "F-04"
+        },
+        {
+          "number": 6,
+          "action": "Počisti iskanje in oba filtra.",
+          "expected": "Iskalno polje in filtra so prazni; seznam ni več omejen s temi pogoji.",
+          "source": "K-04; DOKUMENTACIJA.md, razdelek 8"
+        },
+        {
+          "number": 7,
+          "action": "Vnesi samo »TC02-« brez filtrov.",
+          "expected": "Spet so prikazani vsi trije zapisi, kar potrjuje, da sta filtra počiščena.",
+          "source": "K-04; F-04"
+        }
+      ],
+      "final_expected": "Iskanje in filtra se združujejo (3 / 1 / 0 zapisov), ohranijo se po osvežitvi in jih je mogoče počistiti. Uspeh: ujemajo se vsi pričakovani rezultati. Neizpolnjen predpogoj: »Blokirano«; razhajanje: »Neuspešno«.",
+      "assumptions": [
+        "Korak 2: da iskanje »po več poljih« vključuje številko izkaznice in delno ujemanje niza.",
+        "Korak 3: točni napisi filtrov in vrednosti (»plačano«/»neplačano«) ter da se pogoji združujejo z logičnim IN.",
+        "Korak 5: besedilo sporočila ob praznem rezultatu ni določeno.",
+        "Korak 6: način čiščenja (gumb ali ročna ponastavitev) in njegov napis nista določena."
+      ],
+      "postconditions": "Trije testni člani ostanejo nespremenjeni in ne-arhivirani.",
+      "cleanup": "Administrator lahko testne člane arhivira (K-07) ali jih ohrani za ponovitev. Ponovitev: ponovno uporabi iste člane, če obstajajo in niso arhivirani; sicer jih pripravi znova.",
+      "sources": [
+        "FUNKCIONALNOSTI.md, razdelek 2 (K-04, K-06)",
+        "DOKUMENTACIJA.md, razdelek 3 (F-04), razdelek 8",
+        "UPSTREAM.md, Member browsing and exports"
+      ],
+      "author": "agent UI",
+      "created_date": "19. 10. 2026",
+      "version": "2.0",
+      "actual_result": "Ni izvedeno",
+      "execution_status": "Ni izvedeno",
+      "executor": "Za vnos ob izvedbi",
+      "execution_date": "Za vnos ob izvedbi",
+      "environment": "Lokalna aplikacija http://localhost:3001 (VZPOSTAVITEV.md, razdelek 2); brskalnik in različica aplikacije: Za vnos ob izvedbi",
+      "defect_link": "Za vnos ob izvedbi"
+    },
+    {
+      "id": "TC-03",
+      "title": "Zavrnitev novega člana z e-pošto brez znaka @",
+      "objective": "Preveriti, da sistem ob dodajanju člana z neveljavno e-pošto prikaže napako in zapisa ne shrani.",
+      "functionality_ids": [
+        "K-06",
+        "F-03"
+      ],
+      "role": "ADMIN",
+      "type": "negativni",
+      "priority": "Visoka",
+      "preconditions": [
+        "Aplikacija teče na http://localhost:3001; račun admin@example.test je aktiven.",
+        "Član z izkaznico TC03-001 ne obstaja (preveri v koraku 2)."
+      ],
+      "data": {
+        "geslo": "<VELJAVNO_GESLO_ADMIN>",
+        "ime": "Neža",
+        "priimek": "Zavrnjena",
+        "izkaznica": "TC03-001",
+        "e_posta": "neza.zavrnjena.example.test",
+        "ulica": "Testna ulica 3",
+        "postna_stevilka": "3000",
+        "posta": "Celje",
+        "obcina": "Celje",
+        "clanarina": "plačano"
+      },
+      "steps": [
+        {
+          "number": 1,
+          "action": "Na http://localhost:3001 se prijavi z admin@example.test in <VELJAVNO_GESLO_ADMIN>.",
+          "expected": "Prijava uspe; na voljo je dodajanje članov.",
+          "source": "K-01; DOKUMENTACIJA.md, razdelek 2"
+        },
+        {
+          "number": 2,
+          "action": "Na seznamu članov poišči »TC03-001«.",
+          "expected": "Ni zadetkov.",
+          "source": "K-04"
+        },
+        {
+          "number": 3,
+          "action": "Odpri obrazec za novega člana in vnesi vse testne podatke.",
+          "expected": "Obrazec sprejme vnos.",
+          "source": "K-06"
+        },
+        {
+          "number": 4,
+          "action": "Shrani.",
+          "expected": "Prikaže se sporočilo, da e-pošta ni veljavna, ob polju E-pošta; član ni ustvarjen.",
+          "source": "K-06; F-03; DOKUMENTACIJA.md, razdelek 3 (Nefunkcionalne zahteve)"
+        },
+        {
+          "number": 5,
+          "action": "Zapusti obrazec brez popravka in na seznamu poišči »TC03-001«.",
+          "expected": "Ni zadetkov; zapis ni shranjen.",
+          "source": "K-06; F-03"
+        }
+      ],
+      "final_expected": "Shranjevanje je zavrnjeno z jasnim sporočilom o neveljavni e-pošti; član TC03-001 ne obstaja. Uspeh: ujemajo se vsi pričakovani rezultati. Neizpolnjen predpogoj: »Blokirano«; razhajanje: »Neuspešno«.",
+      "assumptions": [
+        "Korak 4: točno besedilo in mesto sporočila nista določena; napako lahko prikaže brskalnik ali strežnik (oba preverjata vhode).",
+        "Korak 4: ali obrazec po napaki ohrani vnesene podatke, ni določeno.",
+        "Korak 3: točni napisi polj obrazca niso določeni."
+      ],
+      "postconditions": "Nov član ni ustvarjen; podatki niso spremenjeni.",
+      "cleanup": "Ni potrebno. Če je bil zapis kljub temu ustvarjen, ga zabeleži kot napako in arhiviraj. Ponovitev: preveri, da TC03-001 ne obstaja, nato ponovi.",
+      "sources": [
+        "FUNKCIONALNOSTI.md, razdelek 2 (K-06)",
+        "DOKUMENTACIJA.md, razdelek 2, razdelek 3 (F-03, Nefunkcionalne zahteve), razdelek 5 (Podatki člana)"
+      ],
+      "author": "agent UI",
+      "created_date": "19. 10. 2026",
+      "version": "2.0",
+      "actual_result": "Ni izvedeno",
+      "execution_status": "Ni izvedeno",
+      "executor": "Za vnos ob izvedbi",
+      "execution_date": "Za vnos ob izvedbi",
+      "environment": "Lokalna aplikacija http://localhost:3001 (VZPOSTAVITEV.md, razdelek 2); brskalnik in različica aplikacije: Za vnos ob izvedbi",
+      "defect_link": "Za vnos ob izvedbi"
+    },
+    {
+      "id": "TC-04",
+      "title": "Arhiviranje in obnovitev istega člana",
+      "objective": "Preveriti, da arhiviran član izgine z običajnega seznama, je v arhivu in se z obnovitvijo vrne isti zapis z ohranjenimi podatki.",
+      "functionality_ids": [
+        "K-05",
+        "K-07",
+        "F-06"
+      ],
+      "role": "ADMIN",
+      "type": "pozitivni",
+      "priority": "Visoka",
+      "preconditions": [
+        "Aplikacija teče na http://localhost:3001; račun admin@example.test je aktiven.",
+        "Administrator je pripravil ne-arhiviranega člana iz testnih podatkov (K-06); izkaznica TC04-001 je edinstvena."
+      ],
+      "data": {
+        "geslo": "<VELJAVNO_GESLO_ADMIN>",
+        "ime": "Marko",
+        "priimek": "Arhivski",
+        "izkaznica": "TC04-001",
+        "e_posta": "marko.arhivski@example.test",
+        "obcina": "Kranj",
+        "clanarina": "plačano",
+        "opomba": "TC04 opomba"
+      },
+      "steps": [
+        {
+          "number": 1,
+          "action": "Na http://localhost:3001 se prijavi z admin@example.test in <VELJAVNO_GESLO_ADMIN>. Poišči »TC04-001«.",
+          "expected": "Prikazan je natanko en zapis.",
+          "source": "K-04"
+        },
+        {
+          "number": 2,
+          "action": "Odpri podrobnosti; zabeleži URL strani ter vse prikazane podatke.",
+          "expected": "Podrobnosti ustrezajo testnim podatkom.",
+          "source": "K-05"
+        },
+        {
+          "number": 3,
+          "action": "Arhiviraj člana in potrdi dejanje.",
+          "expected": "Sistem zahteva potrditev; arhiviranje uspe.",
+          "source": "K-07; UPSTREAM.md, Security, privacy, and operations"
+        },
+        {
+          "number": 4,
+          "action": "Na običajnem seznamu poišči »TC04-001«.",
+          "expected": "Ni zadetkov.",
+          "source": "K-07; F-06; DOKUMENTACIJA.md, razdelek 8"
+        },
+        {
+          "number": 5,
+          "action": "Odpri arhiv in poišči člana.",
+          "expected": "Član TC04-001 je v arhivu.",
+          "source": "K-07; DOKUMENTACIJA.md, razdelek 2"
+        },
+        {
+          "number": 6,
+          "action": "Obnovi člana.",
+          "expected": "Obnovitev uspe; član ni več v arhivu.",
+          "source": "K-07; F-06"
+        },
+        {
+          "number": 7,
+          "action": "Na običajnem seznamu poišči »TC04-001«.",
+          "expected": "Prikazan je natanko en zapis (ni nastal nov).",
+          "source": "F-06; DOKUMENTACIJA.md, razdelek 5 (Brisanje in zgodovina)"
+        },
+        {
+          "number": 8,
+          "action": "Odpri podrobnosti in primerjaj z zapisom iz koraka 2.",
+          "expected": "URL je enak; vsi podatki so enaki.",
+          "source": "K-05; DOKUMENTACIJA.md, razdelek 5 (Brisanje in zgodovina), razdelek 11"
+        }
+      ],
+      "final_expected": "Isti zapis je po arhiviranju skrit s seznama in viden v arhivu, po obnovitvi pa spet na seznamu z enakim URL in podatki. Uspeh: ujemajo se vsi pričakovani rezultati. Neizpolnjen predpogoj: »Blokirano«; razhajanje: »Neuspešno«.",
+      "assumptions": [
+        "Koraka 2 in 8: da URL podrobnosti vsebuje trajni identifikator zapisa in ga je mogoče uporabiti kot dokaz istovetnosti.",
+        "Korak 3: napisi gumbov in besedilo potrditve niso določeni.",
+        "Korak 6: ali obnovitev zahteva potrditev, ni določeno.",
+        "Vedenje ob neposrednem odprtju URL arhiviranega člana ni določeno in se v tem primeru ne preverja."
+      ],
+      "postconditions": "Član TC04-001 je ne-arhiviran s prvotnimi podatki; revizijska sled lahko vsebuje dogodka arhiviranja in obnovitve.",
+      "cleanup": "Po potrebi člana arhiviraj (K-07). Ponovitev: uporabi ne-arhiviranega člana TC04-001 ali pripravi novega z edinstveno izkaznico.",
+      "sources": [
+        "FUNKCIONALNOSTI.md, razdelek 2 (K-05, K-07)",
+        "DOKUMENTACIJA.md, razdelek 2, razdelek 3 (F-06), razdelek 5, razdelek 8, razdelek 11",
+        "UPSTREAM.md, Security, privacy, and operations"
+      ],
+      "author": "agent UI",
+      "created_date": "19. 10. 2026",
+      "version": "2.0",
+      "actual_result": "Ni izvedeno",
+      "execution_status": "Ni izvedeno",
+      "executor": "Za vnos ob izvedbi",
+      "execution_date": "Za vnos ob izvedbi",
+      "environment": "Lokalna aplikacija http://localhost:3001 (VZPOSTAVITEV.md, razdelek 2); brskalnik in različica aplikacije: Za vnos ob izvedbi",
+      "defect_link": "Za vnos ob izvedbi"
+    },
+    {
+      "id": "TC-05",
+      "title": "Uvoz Excela s pravilom SKIP: nov član, podvojitev in neveljavna vrstica",
+      "objective": "Preveriti, da uvoz s pravilom SKIP ustvari samo nov veljaven zapis, preskoči podvojitev po številki izkaznice, izloči neveljavno vrstico in shrani poročilo v zgodovino.",
+      "functionality_ids": [
+        "K-08",
+        "K-09",
+        "F-07",
+        "F-08"
+      ],
+      "role": "ADMIN",
+      "type": "pozitivni",
+      "priority": "Visoka",
+      "preconditions": [
+        "Aplikacija teče na http://localhost:3001; račun admin@example.test je aktiven.",
+        "Administrator je prek obrazca pripravil ne-arhiviranega obstoječega člana iz testnih podatkov (K-06).",
+        "Člana z izkaznicama TC05-NOV-01 in TC05-NEV-01 ter e-pošto nina.novak.tc05@example.test ne obstajata.",
+        "Pripravljena je datoteka tc05-skip-v1.xlsx (en list »Clani«, glava v vrstici 1, vrstice 2–4)."
+      ],
+      "data": {
+        "geslo": "<VELJAVNO_GESLO_ADMIN>",
+        "obstojeci_clan": {
+          "izkaznica": "TC05-OBST-01",
+          "ime": "Petra",
+          "priimek": "Obstoječa",
+          "e_posta": "petra.obstojeca@example.test",
+          "obcina": "Koper",
+          "opomba": "Izvorna opomba TC05"
+        },
+        "glava": [
+          "Št. Izkaznice",
+          "Priimek",
+          "Ime",
+          "E mail",
+          "Občina"
+        ],
+        "vrstica_2_nov": [
+          "TC05-NOV-01",
+          "Novak",
+          "Nina",
+          "nina.novak.tc05@example.test",
+          "Celje"
+        ],
+        "vrstica_3_podvojitev": [
+          "  tc05-obst-01 ",
+          "Obstoječa",
+          "Petra",
+          "petra.spremenjena@example.test",
+          "Koper"
+        ],
+        "vrstica_4_neveljavna": [
+          "TC05-NEV-01",
+          "Neveljavna",
+          "Vera",
+          "vera.neveljavna.example.test",
+          "Celje"
+        ]
+      },
+      "steps": [
+        {
+          "number": 1,
+          "action": "Na http://localhost:3001 se prijavi z admin@example.test in <VELJAVNO_GESLO_ADMIN>.",
+          "expected": "Prijava uspe; na voljo je uvoz.",
+          "source": "K-01; DOKUMENTACIJA.md, razdelek 2"
+        },
+        {
+          "number": 2,
+          "action": "Poišči TC05-NOV-01 in TC05-NEV-01; odpri podrobnosti TC05-OBST-01 in zabeleži e-pošto, občino in opombo.",
+          "expected": "Prva dva iskanja nimata zadetkov; podatki obstoječega člana ustrezajo testnim.",
+          "source": "K-04; K-05"
+        },
+        {
+          "number": 3,
+          "action": "Odpri uvoz in izberi tc05-skip-v1.xlsx.",
+          "expected": "Datoteka je sprejeta; prikazan je list »Clani« in predogled treh vrstic.",
+          "source": "K-08; DOKUMENTACIJA.md, razdelek 7 (koraki 1–3)"
+        },
+        {
+          "number": 4,
+          "action": "Preveri preslikavo petih stolpcev.",
+          "expected": "Vsi stolpci so preslikani na ustrezna polja, vključno z Ime in Priimek.",
+          "source": "K-08; DOKUMENTACIJA.md, razdelek 7 (korak 3); UPSTREAM.md, Excel import"
+        },
+        {
+          "number": 5,
+          "action": "Izberi pravilo SKIP in nadaljuj na pregled.",
+          "expected": "Pregled pokaže: vrstica 2 za ustvarjanje, vrstica 3 podvojitev obstoječega člana za preskok, vrstica 4 neveljavna z opisom napake e-pošte; potrditev je omogočena.",
+          "source": "F-08; DOKUMENTACIJA.md, razdelek 7 (koraki 4–7, Pravila podvojitev); UPSTREAM.md, Excel import"
+        },
+        {
+          "number": 6,
+          "action": "Pred potrditvijo v drugem zavihku poišči TC05-NOV-01.",
+          "expected": "Ni zadetkov.",
+          "source": "DOKUMENTACIJA.md, razdelek 7 (Slika 5)"
+        },
+        {
+          "number": 7,
+          "action": "Potrdi uvoz.",
+          "expected": "Poročilo pokaže 1 uvoženo, 0 posodobljenih, 1 preskočeno, 1 neveljavno vrstico.",
+          "source": "K-09; F-07; F-08"
+        },
+        {
+          "number": 8,
+          "action": "Poišči TC05-NOV-01.",
+          "expected": "Natanko en zapis: Nina Novak, Celje, nina.novak.tc05@example.test.",
+          "source": "F-07"
+        },
+        {
+          "number": 9,
+          "action": "Poišči TC05-OBST-01 in odpri podrobnosti.",
+          "expected": "En sam zapis; e-pošta, občina in opomba so enake kot v koraku 2.",
+          "source": "F-08; DOKUMENTACIJA.md, razdelek 7 (Pravila podvojitev)"
+        },
+        {
+          "number": 10,
+          "action": "Poišči TC05-NEV-01.",
+          "expected": "Ni zadetkov.",
+          "source": "DOKUMENTACIJA.md, razdelek 7 (Pravila podvojitev)"
+        },
+        {
+          "number": 11,
+          "action": "Odpri zgodovino uvozov in poročilo tega uvoza.",
+          "expected": "Vnos navaja tc05-skip-v1.xlsx, izvajalca admin@example.test in enaka števila kot v koraku 7; vrstica 4 je navedena z napako.",
+          "source": "K-09; F-07; DOKUMENTACIJA.md, razdelek 7"
+        }
+      ],
+      "final_expected": "Nastane samo Nina Novak; obstoječi član je nespremenjen; neveljavni zapis ne nastane; poročilo 1/0/1/1 je v zgodovini uvozov. Uspeh: ujemajo se vsi pričakovani rezultati. Neizpolnjen predpogoj: »Blokirano«; razhajanje: »Neuspešno«.",
+      "assumptions": [
+        "Korak 5: da normalizacija številke izkaznice prezre velikost črk ter začetne in končne presledke, dokumentacija ne določa natančno.",
+        "Podatki: stolpec za opombo ni med podprtimi stolpci, zato spremenjene opombe ni mogoče vključiti v datoteko; korak 9 preveri, da opomba ostane enaka. Potrditi z naročnikom.",
+        "Koraka 5 in 11: točno besedilo napake e-pošte ter ali je preskočena vrstica podrobno navedena v poročilu, nista določena.",
+        "Korak 7: napisi števcev (npr. »ustvarjeno« namesto »uvoženo«) niso določeni."
+      ],
+      "postconditions": "Obstaja nov član TC05-NOV-01; TC05-OBST-01 je nespremenjen; v zgodovini je novo poročilo uvoza.",
+      "cleanup": "Arhiviraj TC05-NOV-01 in po potrebi TC05-OBST-01 (K-07); poročilo uvoza ostane. Ponovitev: arhiviran TC05-NOV-01 bi se ujemal z novo vrstico, zato uporabi novo lokalno okolje ali nove identifikatorje in datoteko tc05-skip-v2.xlsx.",
+      "sources": [
+        "FUNKCIONALNOSTI.md, razdelek 2 (K-08, K-09)",
+        "DOKUMENTACIJA.md, razdelek 3 (F-07, F-08), razdelek 5, razdelek 7",
+        "UPSTREAM.md, Excel import"
+      ],
+      "author": "agent UI",
+      "created_date": "19. 10. 2026",
+      "version": "2.0",
+      "actual_result": "Ni izvedeno",
+      "execution_status": "Ni izvedeno",
+      "executor": "Za vnos ob izvedbi",
+      "execution_date": "Za vnos ob izvedbi",
+      "environment": "Lokalna aplikacija http://localhost:3001 (VZPOSTAVITEV.md, razdelek 2); brskalnik in različica aplikacije: Za vnos ob izvedbi",
+      "defect_link": "Za vnos ob izvedbi"
+    }
+  ]
+}
