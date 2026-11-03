@@ -88,6 +88,42 @@ End-to-end tests read school login details from `.env`, start their own app
 server, and write fictional records to the school database. Stop `npm run dev`
 before running them. They never reuse a server from the original project.
 
+## Performance testing with Lighthouse
+
+Lighthouse signs in through the login form using Playwright, then measures the
+requested page in the same Chrome session with `disableStorageReset: true`.
+This preserves authentication so the report measures the requested page.
+See the [Lighthouse authentication guide](https://github.com/GoogleChrome/lighthouse/blob/main/docs/authenticated-pages.md).
+
+Install Google Chrome. For representative results, stop the development server
+and run a production build:
+
+```bash
+npm run build
+npm start
+```
+
+In another terminal:
+
+```bash
+npm run test:performance                       # dashboard, mobile
+npm run test:performance -- /clani              # member list, mobile
+npm run test:performance -- /clani --desktop    # member list, desktop
+npm run test:performance -- --help
+```
+
+The command loads `.env` and uses `INITIAL_ADMIN_EMAIL` and
+`INITIAL_ADMIN_PASSWORD`. To measure another account, set `LIGHTHOUSE_EMAIL`
+and `LIGHTHOUSE_PASSWORD` in `.env`. `LIGHTHOUSE_BASE_URL` defaults to
+`http://localhost:3001` and accepts local hosts only. Set `CHROME_PATH` if Chrome
+is installed in a custom location.
+
+Each run saves timestamped HTML and JSON reports to `lighthouse-reports/`
+(ignored by Git) and prints the performance score, FCP, LCP, TBT, CLS, and
+Speed Index. Redirects to login or another page fail instead of producing a
+misleading report. The command also works against `npm run dev`, but development
+overhead affects scores. Scores are informational; no pass/fail threshold is set.
+
 ## Application
 
 Next.js, React, TypeScript, PostgreSQL, Prisma, NextAuth Credentials, Tailwind,
