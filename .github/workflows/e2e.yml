@@ -1,0 +1,79 @@
+name: Funkcionalni testi (Playwright)
+
+on:
+  push:
+    branches:
+      [main, zanesljivost-in-testiranje, zanesljivost-in-testiranje-luka]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_DB: member_tracking_school
+          POSTGRES_USER: member_tracking_school
+          POSTGRES_PASSWORD: ci-only-school-password
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U member_tracking_school -d member_tracking_school"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Pripravi .env za CI (naključni ključi, geslo baze CI)
+        run: |
+          DB_URL="postgresql://member_tracking_school:ci-only-school-password@127.0.0.1:5433/member_tracking_school"
+          sed \
+            -e "s#^SCHOOL_DB_PASSWORD=.*#SCHOOL_DB_PASSWORD=ci-only-school-password#" \
+            -e "s#^DATABASE_URL=.*#DATABASE_URL=${DB_URL}#" \
+            -e "s#^DIRECT_URL=.*#DIRECT_URL=${DB_URL}#" \
+            -e "s#^AUTH_SECRET=.*#AUTH_SECRET=$(openssl rand -base64 32)#" \
+            -e "s#^INITIAL_ADMIN_PASSWORD=.*#INITIAL_ADMIN_PASSWORD=$(openssl rand -hex 16)#" \
+            -e "s#^SAMPLE_USER_PASSWORD=.*#SAMPLE_USER_PASSWORD=$(openssl rand -hex 16)#" \
+            .env.example > .env
+
+      - name: Namesti odvisnosti
+        run: npm ci
+
+      - name: Migracije in začetni podatki
+        run: |
+          npm run db:deploy
+          npm run db:seed
+
+      - name: Namesti Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Zaženi funkcionalne teste TC-01 do TC-05
+        run: npx playwright test e2e/tc0 --reporter=list,html,junit
+        env:
+          CI: "true"
+          PLAYWRIGHT_JUNIT_OUTPUT_FILE: test-results/junit.xml
+
+      - name: Naloži HTML poročilo
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14
+
+      - name: Naloži rezultate (JUnit, posnetki, sledi)
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: test-results/
+          retention-days: 14
